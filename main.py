@@ -38,6 +38,12 @@ class PDFSizeCheckUpload(AddOn):
                 fileSizeMB = round(fileSize / (1024 * 1024), 3)
                 if fileSizeMB <= 500:
                     print(f"    File size is: {fileSizeMB} MB, <500MB")
+                    fileObj = self.client.upload(path)
+                    fileObj.access = "private"
+                    fileObj.put()
+                    print("     File Uploaded.")
+                else:
+                    print("     File too large! >= 500MB")
             else:
                 print(f"{path} doesn't exist.")
 
