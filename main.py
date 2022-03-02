@@ -15,6 +15,12 @@ class PDFSizeCheckUpload(AddOn):
     def main(self):
         
         # get the path to the CSV document from the 'params' input argument.
+        """
+        e.g. this was the tested command-ish:
+
+        python3.8 test_addon.py --username "your-name" --password "your-pw" --params '{"name": "world", "pdf_csv": "path-to-your-csv"}'
+
+        """
         csv_path = self.data["pdf_csv"]
 
         # read the csv at the end of that path and iterate through
