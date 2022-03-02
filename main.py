@@ -19,10 +19,14 @@ class PDFSizeCheckUpload(AddOn):
         """
         e.g. this was the tested command-ish:
 
-        python3.8 test_addon.py --username "your-name" --password "your-pw" --params '{"name": "world", "pdf_csv": "path-to-your-csv"}'
-
+        python3.8 test_addon.py --params '{"pdf_csv": "./pdf_csv.csv", "default_access": "private"}'
         """
         csv_path = self.data["pdf_csv"]
+
+        access_options = ["public", "private", "organization"]
+        access = self.data["default_access"]
+        if access not in access_options or access is None:
+            access = "private"
 
         # read the csv at the end of that path and iterate through
         # the paths that are there.
@@ -37,6 +41,10 @@ class PDFSizeCheckUpload(AddOn):
             # confirm path exists.
             if os.path.exists(path):
 
+                if os.path.isdir(path):
+                    print(f"{path} is directory- not currently supported.")
+                    continue
+
                 print(path)
                 # calculate file size.
                 fileSize = os.path.getsize(path)
@@ -45,16 +53,16 @@ class PDFSizeCheckUpload(AddOn):
                 if fileSizeMB <= 500:
                     print(f"    File size is: {fileSizeMB} MB, <500MB")
                     fileObj = self.client.documents.upload(path)
-                    print("Waiting for Successful Upload")
+                    print("     Waiting for Successful Upload")
 
                     # confirm that document is being uploaded.
                     while fileObj.status != 'success':
                         time.sleep(5)
                         fileObj = self.client.documents.get(fileObj.id)
-                        print("...")
+                        print("     ...")
 
                     # automatically set document upload status to private.
-                    fileObj.access = "private"
+                    fileObj.access = access
                     # update status of document.
                     fileObj.put()
                     print("     File Uploaded.")
