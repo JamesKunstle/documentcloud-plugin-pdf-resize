@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+Pipfile
+Pipfile.lock
+pdf_csv.csv
+large.pdf 
+loremipsum.pdf 
+muellerreport.pdf 

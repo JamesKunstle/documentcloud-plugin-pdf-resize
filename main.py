@@ -1,46 +1,41 @@
 """
-This is a hello world add-on for DocumentCloud.
+This is an add-on for DocumentCloud.
 
-It demonstrates how to write a add-on which can be activated from the
-DocumentCloud add-on system and run using Github Actions.  It receives data
-from DocumentCloud via the request dispatch and writes data back to
-DocumentCloud using the standard API
+It reads a csv of relative paths to PDF's to upload.
+CSV File ought to be formatted as one relative file-path per row.
 """
 
 from addon import AddOn
+import csv
+import os
 
 
-class HelloWorld(AddOn):
-    """An example Add-On for DocumentCloud."""
+class PDFSizeCheckUpload(AddOn):
 
     def main(self):
-        """The main add-on functionality goes here."""
-        # fetch your add-on specific data
-        name = self.data.get("name", "world")
+        
+        # get the path to the CSV document from the 'params' input argument.
+        csv_path = self.data["pdf_csv"]
 
-        self.set_message("Hello World start!")
+        # read the csv at the end of that path and iterate through
+        # the paths that are there.
+        paths = []
+        with open(csv_path, newline='') as csvfile:
+            reader = csv.reader(csvfile, delimiter='\n', quotechar='|')
+            for row in reader:
+                paths.append(row[0])
 
-        # add a hello note to the first page of each selected document
-        if self.documents:
-            length = len(self.documents)
-            for i, doc_id in enumerate(self.documents):
-                self.set_progress(100 * i // length)
-                document = self.client.documents.get(doc_id)
-                document.annotations.create(f"Hello {name}!", 0)
-        elif self.query:
-            documents = self.client.documents.search(self.query)[:3]
-            length = len(documents)
-            for i, document in enumerate(documents):
-                self.set_progress(100 * i // length)
-                document.annotations.create(f"Hello {name}!", 0)
+        for path in paths:
+            if os.path.exists(path):
+                print(path)
+                fileSize = os.path.getsize(path)
+                fileSizeMB = round(fileSize / (1024 * 1024), 3)
+                if fileSizeMB <= 500:
+                    print(f"    File size is: {fileSizeMB} MB, <500MB")
+            else:
+                print(f"{path} doesn't exist.")
 
-        with open("hello.txt", "w+") as file_:
-            file_.write("Hello world!")
-            self.upload_file(file_)
-
-        self.set_message("Hello World end!")
-        self.send_mail("Hello World!", "We finished!")
 
 
 if __name__ == "__main__":
-    HelloWorld().main()
+    PDFSizeCheckUpload().main()
