@@ -8,6 +8,7 @@ CSV File ought to be formatted as one relative file-path per row.
 from addon import AddOn
 import csv
 import os
+import time
 
 
 class PDFSizeCheckUpload(AddOn):
@@ -31,15 +32,30 @@ class PDFSizeCheckUpload(AddOn):
             for row in reader:
                 paths.append(row[0])
 
+        # for each of the paths we were given:
         for path in paths:
+            # confirm path exists.
             if os.path.exists(path):
+
                 print(path)
+                # calculate file size.
                 fileSize = os.path.getsize(path)
                 fileSizeMB = round(fileSize / (1024 * 1024), 3)
+
                 if fileSizeMB <= 500:
                     print(f"    File size is: {fileSizeMB} MB, <500MB")
-                    fileObj = self.client.upload(path)
+                    fileObj = self.client.documents.upload(path)
+                    print("Waiting for Successful Upload")
+
+                    # confirm that document is being uploaded.
+                    while fileObj.status != 'success':
+                        time.sleep(5)
+                        fileObj = self.client.documents.get(fileObj.id)
+                        print("...")
+
+                    # automatically set document upload status to private.
                     fileObj.access = "private"
+                    # update status of document.
                     fileObj.put()
                     print("     File Uploaded.")
                 else:
